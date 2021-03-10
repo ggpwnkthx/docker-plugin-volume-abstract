@@ -13,7 +13,7 @@
         }
     ],
     "interface": {
-        "socket": "/run/docker/plugins/volume.sock",
+        "socket": "/volume.sock",
         "types": [
             "docker.volumedriver/2.0"
         ]
