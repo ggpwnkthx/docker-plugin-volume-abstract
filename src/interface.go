@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 
@@ -9,17 +8,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func newVolumeDriver(config string) (*volumeDriver, error) {
+type volumeDriver struct{}
+
+func newVolumeDriver() (*volumeDriver, error) {
 	var d *volumeDriver
-	json.Unmarshal([]byte(config), &d)
-	logrus.WithField("method", "new driver").Debug(d.root)
+	logrus.WithField("method", "new driver").Debug(propagatedMount)
 	return d, nil
 }
 
 // Get the list of capabilities the driver supports.
 // The driver is not required to implement Capabilities. If it is not implemented, the default values are used.
 func (d *volumeDriver) Capabilities() *volume.CapabilitiesResponse {
-	logrus.WithField("method", "capabilities").Debugf("version %s, build %s, branch: %s\n", Version, CommitHash, BranchName)
 	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "global"}}
 }
 
@@ -40,7 +39,7 @@ func (d *volumeDriver) Create(r *volume.CreateRequest) error {
 			}
 		}
 	}
-	v.Mountpoint = filepath.Join(d.root, r.Name) // "/path/under/PropagatedMount"
+	v.Mountpoint = filepath.Join(propagatedMount, r.Name) // "/path/under/PropagatedMount"
 	v.Name = r.Name
 	if err := updateVolume(&v); err != nil {
 		return err
@@ -64,7 +63,6 @@ func (d *volumeDriver) Get(r *volume.GetRequest) (*volume.GetResponse, error) {
 
 // List of volumes registered with the plugin.
 func (d *volumeDriver) List() (*volume.ListResponse, error) {
-	logrus.WithField("method", "list").Debugf("version %s, build %s, branch: %s\n", Version, CommitHash, BranchName)
 	var vols = listVolumes()
 	return &volume.ListResponse{Volumes: vols}, nil
 }

@@ -12,15 +12,11 @@ type dockerVolume struct {
 	connections      int
 }
 
-type volumeDriver struct {
-	root string
-}
-
 func getVolumeByName(name string) (*dockerVolume, error) {
 	var v = dockerVolume{
 		Options:     nil,
 		Name:        name,
-		Mountpoint:  filepath.Join("/mnt", name),
+		Mountpoint:  filepath.Join(propagatedMount, name),
 		connections: 0,
 	}
 	return &v, nil

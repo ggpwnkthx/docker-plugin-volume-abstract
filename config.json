@@ -7,9 +7,19 @@
     ],
     "env": [
         {
-            "name": "VERSION",
-            "settable": null,
-            "description": "docker-plugin-volume-abstract: ${RELEASE_DATE} ${COMMIT_HASH}${DIRTY}"
+            "name": "NETWORK",
+            "settable": [ 
+                "value" 
+            ],
+            "description": "Name or ID of the docker network where the storage server can be found."
+        },
+        {
+          "name": "DEBUG",
+          "settable": [
+            "value"
+          ],
+          "value": "false",
+          "description": "Enable debug output."
         }
     ],
     "interface": {
