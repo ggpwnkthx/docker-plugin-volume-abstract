@@ -1,4 +1,4 @@
-module main
+module docker-plugin-volume-abstract
 
 go 1.16
 
