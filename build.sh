@@ -1,12 +1,19 @@
 #!/bin/sh
+SCOPE_USER=ggpwnkthx
 PLUGIN_NAME=docker-plugin-volume-abstract
 
-docker run -it --rm -v $(pwd):/src/app -w /src/app/src golang:alpine go build -o ../$PLUGIN_NAME
+# Clean-up
+docker plugin disable $SCOPE_USER/$PLUGIN_NAME
+docker plugin rm $SCOPE_USER/$PLUGIN_NAME
 
-docker build -t $PLUGIN_NAME .
-CONTAINER_ID=$(docker create $PLUGIN_NAME true)
+# Build
+docker build -t $SCOPE_USER/$PLUGIN_NAME .
+CONTAINER_ID=$(docker create $SCOPE_USER/$PLUGIN_NAME true)
 mkdir -p plugin/rootfs
 docker export "$CONTAINER_ID" | tar -x -C plugin/rootfs
 docker rm -vf "$CONTAINER_ID"
-docker rmi $PLUGIN_NAME
-docker plugin create $PLUGIN_NAME ./plugin
+docker rmi $SCOPE_USER/$PLUGIN_NAME
+docker plugin create $SCOPE_USER/$PLUGIN_NAME ./plugin
+
+# Enable
+docker plugin enable $SCOPE_USER/$PLUGIN_NAME
