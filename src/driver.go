@@ -84,7 +84,7 @@ func (d *volumeDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, err
 		d.mountVolume(v)
 		return &volume.MountResponse{Mountpoint: v.Mountpoint}, nil
 	} else {
-		return &volume.MountResponse{Err: "volume not found"}, logError("volume %s not found", r.Name)
+		return &volume.MountResponse{}, logError("volume %s not found", r.Name)
 	}
 }
 
@@ -94,7 +94,7 @@ func (d *volumeDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error)
 	if v, found := d.volumes[r.Name]; found {
 		return &volume.PathResponse{Mountpoint: v.Mountpoint}, nil
 	} else {
-		return &volume.PathResponse{Err: "volume not found"}, logError("volume %s not found", r.Name)
+		return &volume.PathResponse{}, logError("volume %s not found", r.Name)
 	}
 
 }
