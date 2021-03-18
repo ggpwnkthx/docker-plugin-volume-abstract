@@ -13,7 +13,7 @@ type volumeDriver struct {
 	volumes         map[string]*dockerVolume
 }
 
-func newVolumeDriver() (*volumeDriver, error) {
+func newVolumeDriver(propagatedMount string) (*volumeDriver, error) {
 	var d *volumeDriver
 	logrus.WithField("method", "new driver").Debug(propagatedMount)
 	return d, nil
@@ -44,7 +44,7 @@ func (d *volumeDriver) Create(r *volume.CreateRequest) error {
 	}
 	v.Mountpoint = filepath.Join(propagatedMount, r.Name) // "/path/under/PropagatedMount"
 	v.Name = r.Name
-	if err := updateVolume(&v); err != nil {
+	if err := d.updateVolume(&v); err != nil {
 		return err
 	}
 	return nil
@@ -53,7 +53,7 @@ func (d *volumeDriver) Create(r *volume.CreateRequest) error {
 // Get info about volume_name.
 func (d *volumeDriver) Get(r *volume.GetRequest) (*volume.GetResponse, error) {
 	logrus.WithField("method", "get").Debugf("%#v", r)
-	v, err := getVolumeByName(r.Name)
+	v, err := d.getVolumeByName(r.Name)
 	if err != nil {
 		return &volume.GetResponse{}, logError("volume %s not found", r.Name)
 	}
@@ -66,7 +66,7 @@ func (d *volumeDriver) Get(r *volume.GetRequest) (*volume.GetResponse, error) {
 
 // List of volumes registered with the plugin.
 func (d *volumeDriver) List() (*volume.ListResponse, error) {
-	var vols = listVolumes()
+	var vols = d.listVolumes()
 	return &volume.ListResponse{Volumes: vols}, nil
 }
 
@@ -78,15 +78,15 @@ func (d *volumeDriver) List() (*volume.ListResponse, error) {
 // ID is a unique ID for the caller that is requesting the mount.
 func (d *volumeDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, error) {
 	logrus.WithField("method", "mount").Debugf("%#v", r)
-	v, _ := getVolumeByName(r.Name)
-	mountVolume(v)
+	v, _ := d.getVolumeByName(r.Name)
+	d.mountVolume(v)
 	return &volume.MountResponse{Mountpoint: v.Mountpoint}, nil
 }
 
 // Path requests the path to the volume with the given volume_name.
 func (d *volumeDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error) {
 	logrus.WithField("method", "path").Debugf("%#v", r)
-	v, err := getVolumeByName(r.Name)
+	v, err := d.getVolumeByName(r.Name)
 	if err != nil {
 		return &volume.PathResponse{}, logError("volume %s not found", r.Name)
 	}
@@ -97,18 +97,18 @@ func (d *volumeDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error)
 // user invokes docker rm -v to remove volumes associated with a container.
 func (d *volumeDriver) Remove(r *volume.RemoveRequest) error {
 	logrus.WithField("method", "remove").Debugf("%#v", r)
-	v, err := getVolumeByName(r.Name)
+	v, err := d.getVolumeByName(r.Name)
 	if err != nil {
 		return logError("volume %s not found", r.Name)
 	}
 	if v.connections != 0 {
 		return logError("volume %s is currently used by a container", r.Name)
 	}
-	unmountVolume(v)
+	d.unmountVolume(v)
 	if err := os.RemoveAll(v.Mountpoint); err != nil {
 		logError(err.Error())
 	}
-	removeVolume(v)
+	d.removeVolume(v)
 	return nil
 }
 
@@ -118,21 +118,20 @@ func (d *volumeDriver) Remove(r *volume.RemoveRequest) error {
 // ID is a unique ID for the caller that is requesting the mount.
 func (d *volumeDriver) Unmount(r *volume.UnmountRequest) error {
 	logrus.WithField("method", "unmount").Debugf("%#v", r)
-	v, err := getVolumeByName(r.Name)
+	v, err := d.getVolumeByName(r.Name)
 	if err != nil {
 		return logError("volume %s not found", r.Name)
 	}
 	v.connections--
-	err = updateVolume(v)
-	if err = updateVolume(v); err != nil {
+	if err = d.updateVolume(v); err != nil {
 		logrus.WithField("updateVolume ERROR", err).Errorf("%#v", v)
 	} else {
 		logrus.WithField("updateVolume", r.Name).Debugf("%#v", v)
 	}
 	if v.connections <= 0 {
 		v.connections = 0
-		updateVolume(v)
-		unmountVolume(v)
+		d.updateVolume(v)
+		d.unmountVolume(v)
 	}
 	return nil
 }
