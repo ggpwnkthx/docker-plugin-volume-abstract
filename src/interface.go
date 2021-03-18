@@ -16,7 +16,7 @@ func (d *volumeDriver) getVolumeByName(name string) (*dockerVolume, error) {
 	var v = dockerVolume{
 		Options:     nil,
 		Name:        name,
-		Mountpoint:  filepath.Join(d.propogatedMount, name),
+		Mountpoint:  filepath.Join(d.propagatedMount, name),
 		connections: 0,
 	}
 	return &v, nil
