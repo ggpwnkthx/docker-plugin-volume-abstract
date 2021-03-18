@@ -14,8 +14,11 @@ type volumeDriver struct {
 }
 
 func newVolumeDriver(propagatedMount string) (*volumeDriver, error) {
-	var d *volumeDriver
 	logrus.WithField("method", "new driver").Debug(propagatedMount)
+	d := &volumeDriver{
+		propagatedMount: propagatedMount,
+		volumes:         map[string]*dockerVolume{},
+	}
 	return d, nil
 }
 
