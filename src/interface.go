@@ -1,8 +1,6 @@
 package main
 
 import (
-	"path/filepath"
-
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
@@ -10,16 +8,6 @@ type dockerVolume struct {
 	Options          []string
 	Name, Mountpoint string
 	connections      int
-}
-
-func (d *volumeDriver) getVolumeByName(name string) (*dockerVolume, error) {
-	var v = dockerVolume{
-		Options:     nil,
-		Name:        name,
-		Mountpoint:  filepath.Join(d.propagatedMount, name),
-		connections: 0,
-	}
-	return &v, nil
 }
 
 func (d *volumeDriver) listVolumes() []*volume.Volume {
